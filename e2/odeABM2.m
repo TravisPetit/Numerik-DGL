@@ -29,7 +29,7 @@ function [x, y] = odeABM2(f, a, b, ya, n, m)
             t3 = 5/12 * f( [x(i+2);y(:,i+2)] );
             
             % corrector
-            y(:,i+2) = y(:,i+1) + h * (t1 + t2 + t3);    
+            y(:,i+2) = y(:,i+1) + h * (t1 + t2 + t3);
         end
         tmp = [tmp(:,2), f( [x(i+2); y(:,i+2)] )];
     end
