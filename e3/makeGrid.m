@@ -22,8 +22,8 @@ function [C, H, G, B] = makeGrid(phi, c, xs, ys, p)
 
     % compute I
     nd = 0;
-    for j = 1:r
-        for k = 1:s
+    for k = 1:s
+        for j = 1:r
             if phi(xs(j), ys(k)) > c
                 nd = nd + 1;
                 I(j,k) = nd;
@@ -35,36 +35,39 @@ function [C, H, G, B] = makeGrid(phi, c, xs, ys, p)
     % and compute G
     C = zeros(4, nd);
     G = zeros(2, nd);
-    for j = 2:r-1
-        for k = 2:s-1
+    for k = 2:s-1
+        for j = 2:r-1
             if I(j,k) ~= 0
-                C(1,I(j,k)) = I(j-1,k);
-                C(2,I(j,k)) = I(j+1,k);
-                C(3,I(j,k)) = I(j-1,k-1);
-                C(4,I(j,k)) = I(j-1,k+1);
+                 C(1,I(j,k)) = I(j-1,k);
+                 C(2,I(j,k)) = I(j+1,k);
+                 C(3,I(j,k)) = I(j,k-1);
+                 C(4,I(j,k)) = I(j,k+1);
                 
                 G(1, I(j,k)) = xs(j);
                 G(2, I(j,k)) = ys(k);
             end
         end
     end
-        
+    
+    
     % compute C part 2/2 and B, H
     nb = nnz(~C); % number of zeros in C
     B = zeros(2, nb);
+    H = zeros(4, nd);
     m = 0;
-    for j = 2:r-1
-        for k = 2:s-1
+    for k = 2:s-1
+        for j = 2:r-1
             if I(j,k) ~=0
                 
+                left = xs(j-1);
+                % check left
                 if I(j-1,k) == 0
                     m = m + 1;
                     C(1, I(j, k)) = -m;
                     
-                    left = xs(j);
-                    right = xs(j-1);
-                    for q = 1:p
-                        mid = (right - left)/2;
+                    right = xs(j);
+                    for q = 1:p               
+                        mid = (right + left)/2;
                         if phi(mid, ys(k)) > c
                             right = mid;
                         else
@@ -74,15 +77,18 @@ function [C, H, G, B] = makeGrid(phi, c, xs, ys, p)
                     B(1,m) = left;
                     B(2,m) = ys(k);
                 end
+                H(1, I(j,k)) = abs(left - xs(j));
                 
+                
+                right = xs(j+1);
+                %check right
                 if I(j+1,k) == 0
                     m = m + 1;
                     C(2, I(j, k)) = -m;
                     
-                    left = xs(j+1);
-                    right = xs(j);
+                    left = xs(j);
                     for q = 1:p
-                        mid = (right - left)/2;
+                        mid = (right + left)/2;
                         if phi(mid, ys(k)) <= c
                             right = mid;
                         else
@@ -92,33 +98,18 @@ function [C, H, G, B] = makeGrid(phi, c, xs, ys, p)
                     B(1,m) = right;
                     B(2,m) = ys(k);
                 end
+                H(2, I(j,k)) = abs(right - xs(j));
                 
+                
+                %check down
+                down = ys(k-1);
                 if I(j,k-1) == 0
                     m = m + 1;
                     C(3, I(j, k)) = -m;
                     
                     up = ys(k);
-                    down = ys(k-1);
                     for q = 1:p
-                        mid = (up - down)/2;
-                        if phi(xs(j), mid) > c
-                            down = mid;
-                        else
-                            up = mid;
-                        end
-                    end
-                    B(1,m) = xs(j);
-                    B(2,m) = up;
-                end
-                
-                if I(j,k+1) == 0
-                    m = m + 1;
-                    C(4, I(j, k)) = -m;
-                    
-                    up = ys(k+1);
-                    down = ys(k);
-                    for q = 1:p
-                        mid = (up - down)/2;
+                        mid = (up + down)/2;
                         if phi(xs(j), mid) > c
                             up = mid;
                         else
@@ -128,10 +119,31 @@ function [C, H, G, B] = makeGrid(phi, c, xs, ys, p)
                     B(1,m) = xs(j);
                     B(2,m) = down;
                 end
+                H(3, I(j,k)) = abs(down - ys(k));
+                
+                
+                up = ys(k+1);
+                %check up
+                if I(j,k+1) == 0
+                    m = m + 1;
+                    C(4, I(j, k)) = -m;
+                    down = ys(k);
+                    for q = 1:p
+                        mid = (up + down)/2;
+                        if phi(xs(j), mid) > c
+                            down = mid;
+                        else
+                            up = mid;
+                        end
+                    end
+                    B(1,m) = xs(j);
+                    B(2,m) = up;
+                end
+                H(4, I(j,k)) = abs(up - ys(k));
                 
             end
         end
     end
     
-    H = zeros(4, nd);
+    
 end
